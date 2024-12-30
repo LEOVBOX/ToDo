@@ -11,7 +11,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		B3591CFC2D10B2F200AEDB18 /* Exceptions for "ToDo" folder in "ToDo" target */ = {
+		B3FC2CBD2D22EF6C0079D9C9 /* Exceptions for "ToDo" folder in "ToDo" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -24,7 +24,7 @@
 		B3591CEC2D10B2F100AEDB18 /* ToDo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				B3591CFC2D10B2F200AEDB18 /* Exceptions for "ToDo" folder in "ToDo" target */,
+				B3FC2CBD2D22EF6C0079D9C9 /* Exceptions for "ToDo" folder in "ToDo" target */,
 			);
 			path = ToDo;
 			sourceTree = "<group>";

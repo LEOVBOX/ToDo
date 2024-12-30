@@ -21,5 +21,10 @@
 			</array>
 		</dict>
 	</dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>DarumaDropOne-Regular.ttf</string>
+		<string>Poppins-Regular.ttf</string>
+	</array>
 </dict>
 </plist>
