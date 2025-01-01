@@ -23,11 +23,19 @@ struct SignUpView: View {
     @State private var eMail: String = ""
     @State private var password: String = ""
     @State private var fullName: String = ""
+    @FocusState private var focusedField: Field?
+    
+    enum Field: Hashable {
+        case name, email, password
+    }
     
     var body: some View {
         ZStack {
             backgroundGradient
                 .ignoresSafeArea()
+                .onTapGesture {
+                    focusedField = nil
+                }
             
             VStack {
                 // Header
@@ -58,9 +66,36 @@ struct SignUpView: View {
                 
                 // Input fields
                 VStack (spacing: 40) {
-                    CustomTextField(image: Image("person"), placeholder: "Full name", text: $fullName, validate: validateName)
-                    CustomTextField(image: Image("e-mail"), placeholder: "E-mail", text: $eMail, validate: validateEmail)
-                    CustomTextField(image: Image("lock"), placeholder: "Password", text: $password, validate: validatePassword, isSecure: true)
+                    CustomTextField(
+                        image: Image("person"),
+                        placeholder: "Имя",
+                        text: $fullName,
+                        validate: { text in
+                            print("Валидация имени: \(text)")
+                        }
+                    )
+                    .focused($focusedField, equals: .name)
+                    
+                    CustomTextField(
+                        image: Image("e-mail"),
+                        placeholder: "Email",
+                        text: $eMail,
+                        validate: { text in
+                            print("Валидация email: \(text)")
+                        }
+                    )
+                    .focused($focusedField, equals: .email)
+                    
+                    CustomTextField(
+                        image: Image("lock"),
+                        placeholder: "Пароль",
+                        text: $password,
+                        validate: { text in
+                            print("Валидация пароля: \(text)")
+                        },
+                        isSecure: true
+                    )
+                    .focused($focusedField, equals: .password)
                     
                 }
                 .padding(.top, 50)

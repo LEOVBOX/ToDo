@@ -33,10 +33,19 @@ struct LoginView: View {
     @State private var eMail: String = ""
     @State private var password: String = ""
     
+    @FocusState private var focusedField: Field?
+    
+    enum Field: Hashable {
+        case email, password
+    }
+    
     var body: some View {
         ZStack {
             backgroundGradient
                 .ignoresSafeArea()
+                .onTapGesture {
+                    focusedField = nil
+                }
             
             VStack {
                 // Header
@@ -68,7 +77,9 @@ struct LoginView: View {
                 // Input fields
                 VStack (spacing: 55) {
                     CustomTextField(image: Image("e-mail"), placeholder: "E-mail", text: $eMail, validate: validateEmail)
+                        .focused($focusedField, equals: .email)
                     CustomTextField(image: Image("lock"), placeholder: "Password", text: $password, validate: validatePassword, isSecure: true)
+                        .focused($focusedField, equals: .password)
                 }
                 .padding(.top, 50)
                 

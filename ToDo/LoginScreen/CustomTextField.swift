@@ -11,7 +11,6 @@ struct CustomTextField: View {
     var image: Image
     @State var placeholder: String
     @Binding var text: String
-    @FocusState private var fieldFocused: Bool
     var validate: (String) -> ()
     @State var isSecure: Bool = false
     
@@ -26,7 +25,6 @@ struct CustomTextField: View {
                 image
                 if isSecure {
                     SecureField(placeholder, text: $text)
-                        .focused($fieldFocused)
                         .onSubmit {
                             validate(text)
                         }
@@ -34,7 +32,6 @@ struct CustomTextField: View {
                 }
                 else {
                     TextField(placeholder, text: $text)
-                        .focused($fieldFocused)
                         .onSubmit {
                             validate(text)
                         }
