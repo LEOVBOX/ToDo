@@ -11,7 +11,6 @@ struct CustomTextField: View {
     var image: Image
     @State var placeholder: String
     @Binding var text: String
-    var validate: (String) -> ()
     @State var isSecure: Bool = false
     
     var body: some View {
@@ -25,25 +24,16 @@ struct CustomTextField: View {
                 image
                 if isSecure {
                     SecureField(placeholder, text: $text)
-                        .onSubmit {
-                            validate(text)
-                        }
                         .disableAutocorrection(true)
                 }
                 else {
                     TextField(placeholder, text: $text)
-                        .onSubmit {
-                            validate(text)
-                        }
                         .disableAutocorrection(true)
                 }
-                
-                
             }
             .padding(.horizontal, 10)
                 Spacer()
             }
-            
         }
 }
 

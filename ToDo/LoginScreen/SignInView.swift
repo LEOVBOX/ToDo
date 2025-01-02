@@ -7,36 +7,31 @@
 
 import SwiftUI
 
-
-func validateEmail(eMail: String) {
-    
-}
-
-func validatePassword(password: String) {
-    
-}
-
-func signIn() {
-    
-}
-
-func openSignUpView() {
-    
-}
-
-struct LoginView: View {
+struct SignInView: View {
     @State private var showSignUp = false
-    private let mainFontName = "Poppins-Regular"
-    private let artificialFontName = "DarumaDropOne-Regular"
-    private let backgroundGradient = LinearGradient(gradient: Gradient(colors: [Color(0x1254AA), Color(0x05243E)]), startPoint: .top, endPoint: .bottom)
-    
     @State private var eMail: String = ""
     @State private var password: String = ""
+    @State private var signInError: Error? = nil
+    @State private var showAlert = false
+    @State private var showMainView = false
+    @State private var signedInUser: UserModel? = nil
     
     @FocusState private var focusedField: Field?
     
     enum Field: Hashable {
         case email, password
+    }
+    
+    func signIn() {
+        do {
+            signedInUser = try AuthenticationService.authenticate(login: eMail, password: password).get()
+        }
+        catch {
+            showAlert = true
+            signInError = error
+            return
+        }
+        showMainView = true
     }
     
     var body: some View {
@@ -76,9 +71,9 @@ struct LoginView: View {
                 
                 // Input fields
                 VStack (spacing: 55) {
-                    CustomTextField(image: Image("e-mail"), placeholder: "E-mail", text: $eMail, validate: validateEmail)
+                    CustomTextField(image: Image("e-mail"), placeholder: "E-mail", text: $eMail)
                         .focused($focusedField, equals: .email)
-                    CustomTextField(image: Image("lock"), placeholder: "Password", text: $password, validate: validatePassword, isSecure: true)
+                    CustomTextField(image: Image("lock"), placeholder: "Password", text: $password, isSecure: true)
                         .focused($focusedField, equals: .password)
                 }
                 .padding(.top, 50)
@@ -95,6 +90,9 @@ struct LoginView: View {
                                 .font(Font.custom(mainFontName, size: 18))
                                 .foregroundStyle(.white)
                         }
+                    }
+                    .fullScreenCover(isPresented: $showMainView) {
+                        HomeView(viewModel: HomePageViewModel(user: signedInUser!))
                     }
                     
                     HStack {
@@ -113,12 +111,19 @@ struct LoginView: View {
                 .padding(.top, 70)
                 
                 Spacer()
-            }.padding(.horizontal, 26)
-            
+            }
+            .padding(.horizontal, 26)
+            .alert(isPresented: $showAlert) {
+                Alert(
+                    title: Text("Ошибка"),
+                    message: Text(signInError?.localizedDescription ?? "Неизвестная ошибка"),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
         }
     }
 }
 
 #Preview {
-    LoginView()
+    SignInView()
 }

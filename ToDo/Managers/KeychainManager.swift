@@ -8,24 +8,32 @@
 import Foundation
 import Security
 
+
 class KeychainManager {
     static let shared = KeychainManager()
     
     private init() {}
     
-    func save(key: String, value: String) -> Bool {
-        guard let data = value.data(using: .utf8) else { return false }
+    func save(key: String, value: String) -> Result<Void, Error> {
+        guard let data = value.data(using: .utf8) else {
+            return .failure(NSError(domain: "InvalidData", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to encode value to data"]))
+        }
         
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: key,
-            kSecValueData as String: data
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked
         ]
         
-        //SecItemDelete(query as CFDictionary) // Удаляем старое значение, если оно есть
         let status = SecItemAdd(query as CFDictionary, nil)
         
-        return status == errSecSuccess
+        if status == errSecSuccess {
+            return .success(())
+        } else {
+            let error = NSError(domain: NSOSStatusErrorDomain, code: Int(status), userInfo: [NSLocalizedDescriptionKey: "Failed to save item to keychain"])
+            return .failure(error)
+        }
     }
     
     func get(key: String) -> String? {

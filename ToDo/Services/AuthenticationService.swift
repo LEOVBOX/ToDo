@@ -23,12 +23,10 @@ enum AuthenticationError: Error, LocalizedError {
     }
 }
 
-enum RegisterError: Error, LocalizedError {
-    case fail
-}
+
 
 class AuthenticationService {
-    static func authenticate(login: String, password: String) -> Result<Void, AuthenticationError> {
+    static func authenticate(login: String, password: String) -> Result<UserModel, AuthenticationError> {
         guard !login.isEmpty, !password.isEmpty else {
             return .failure(.emptyFields)
         }
@@ -41,15 +39,18 @@ class AuthenticationService {
             return .failure(.invalidPassword)
         }
         
-        return .success(())
+
+        var user: UserModel
+        do {
+            user = try SQLiteManager.shared.getUser(login: login).get()
+            UserDefaultsManager.shared.saveLoggedInUser(login: user.email)
+        }
+        catch {
+            return .failure(.userNotFound)
+        }
+        
+        return .success(user)
     }
     
-    static func register(username: String, login: String, password: String) -> Result<Void, RegisterError> {
-        if KeychainManager.shared.save(key: username, value: password) {
-            return .success(())
-        }
-        else {
-            return .failure(RegisterError.fail)
-        }
-    }
+    
 }

@@ -19,9 +19,33 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let scene = (scene as? UIWindowScene) else { return }
         
-        //let navigationController = UIHostingController(rootView: GuideView())
-        let navigationController = UIHostingController(rootView: SignUpView())
-        scene.windows.first?.rootViewController = navigationController
+        print(UserDefaults.standard.dictionaryRepresentation())
+        
+        
+        if let signedInUserLogin = UserDefaultsManager.shared.getLoggedInUser() {
+            print("Logged in user login: \(signedInUserLogin)")
+            do {
+                let user = try SQLiteManager.shared.getUser(login: signedInUserLogin).get()
+                let navigationController = UIHostingController(rootView: HomeView(viewModel: HomePageViewModel(user: user)))
+                scene.windows.first?.rootViewController = navigationController
+            }
+            catch {
+                let navigationController = UIHostingController(rootView: SignInView())
+            }
+            
+        }
+        else {
+            if UserDefaultsManager.shared.skipGuide() == true {
+                let navigationController = UIHostingController(rootView: SignInView())
+                scene.windows.first?.rootViewController = navigationController
+            }
+            else {
+                let navigationController = UIHostingController(rootView: GuideView())
+                scene.windows.first?.rootViewController = navigationController
+            }
+        }
+        
+        
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

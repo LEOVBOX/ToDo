@@ -7,11 +7,6 @@
 
 import SwiftUI
 
-func validateName(name: String) {
-    
-}
-
-
 
 struct SignUpView: View {
     @State private var showSignIn = false
@@ -23,10 +18,31 @@ struct SignUpView: View {
     @State private var eMail: String = ""
     @State private var password: String = ""
     @State private var fullName: String = ""
+    @State private var signUpError: Error? = nil
+    @State private var showAlert = false
+    @State private var showHomeView = false
+    @State private var signedUpUser: UserModel? = nil
+    
     @FocusState private var focusedField: Field?
     
     enum Field: Hashable {
         case name, email, password
+    }
+    
+    private func signUp() {
+        do {
+            try RegistrationService.validateName(name: fullName).get()
+            try RegistrationService.validateEmail(eMail: eMail).get()
+            try RegistrationService.validatePassword(password: password).get()
+            signedUpUser = try RegistrationService.register(username: fullName, login: eMail, password: password).get()
+        }
+        catch {
+            signUpError = error
+            showAlert = true
+            return
+        }
+        
+        showHomeView = true
     }
     
     var body: some View {
@@ -45,7 +61,7 @@ struct SignUpView: View {
                         .frame(width: 83, height: 83)
                     VStack (spacing: 4) {
                         HStack {
-                            Text("Welcome Back to")
+                            Text("Welcome to")
                                 .font(Font.custom(mainFontName, size: 25))
                                 .foregroundStyle(.white)
                             Text("DO IT")
@@ -68,31 +84,22 @@ struct SignUpView: View {
                 VStack (spacing: 40) {
                     CustomTextField(
                         image: Image("person"),
-                        placeholder: "Имя",
-                        text: $fullName,
-                        validate: { text in
-                            print("Валидация имени: \(text)")
-                        }
+                        placeholder: "Full Name",
+                        text: $fullName
                     )
                     .focused($focusedField, equals: .name)
                     
                     CustomTextField(
                         image: Image("e-mail"),
-                        placeholder: "Email",
-                        text: $eMail,
-                        validate: { text in
-                            print("Валидация email: \(text)")
-                        }
+                        placeholder: "E-mail",
+                        text: $eMail
                     )
                     .focused($focusedField, equals: .email)
                     
                     CustomTextField(
                         image: Image("lock"),
-                        placeholder: "Пароль",
+                        placeholder: "Password",
                         text: $password,
-                        validate: { text in
-                            print("Валидация пароля: \(text)")
-                        },
                         isSecure: true
                     )
                     .focused($focusedField, equals: .password)
@@ -102,7 +109,7 @@ struct SignUpView: View {
                 
                 // Button and hint
                 VStack (spacing: 20) {
-                    Button (action: signIn) {
+                    Button (action: signUp) {
                         ZStack {
                             Rectangle()
                                 .fill(Color(0x0EA5E9))
@@ -113,6 +120,9 @@ struct SignUpView: View {
                                 .foregroundStyle(.white)
                         }
                     }
+                    .fullScreenCover(isPresented: $showHomeView) {
+                        HomeView(viewModel: HomePageViewModel(user: signedUpUser!))
+                    }
                     
                     HStack {
                         Text("Already have an account?")
@@ -122,7 +132,7 @@ struct SignUpView: View {
                             showSignIn = true
                         }
                         .fullScreenCover(isPresented: $showSignIn) {
-                            LoginView()
+                            SignInView()
                         }
 
                     }
@@ -131,7 +141,15 @@ struct SignUpView: View {
                 .padding(.top, 70)
                 
                 Spacer()
-            }.padding(.horizontal, 26)
+            }
+            .padding(.horizontal, 26)
+            .alert(isPresented: $showAlert) {
+                Alert(
+                    title: Text("Ошибка"),
+                    message: Text(signUpError?.localizedDescription ?? "Неизвестная ошибка"),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
             
         }
     }

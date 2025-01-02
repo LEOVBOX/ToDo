@@ -7,13 +7,6 @@
 
 import SwiftUI
 
-enum Constants {
-    case backgroundGradientStart
-    case backgroundGradientEnd
-    
-    
-}
-
 struct CustomTabIndicator: View {
     @Binding var currentIndex: Int
     @State var tabCount: Int
@@ -57,6 +50,8 @@ struct GuideView: View {
         GuideSlideViewModel(imageName: "illustration4", descritptionText: "You informations are secure with us"),
     ])
     
+    @State private var showSignInView = false
+    
     let backgroundGradient = LinearGradient(gradient: Gradient(colors: [Color(0x1254AA), Color(0x05243E)]), startPoint: .top, endPoint: .bottom)
     
     var body: some View {
@@ -79,7 +74,8 @@ struct GuideView: View {
                         if currentIndex < viewModel.slidesViewModels.count - 1 {
                             currentIndex += 1
                         } else {
-                            print("Guide Finished")
+                            UserDefaultsManager.shared.skipGuide(skipGuide: true)
+                            showSignInView = true
                         }
                     }) {
                         ZStack {
@@ -92,6 +88,9 @@ struct GuideView: View {
                                 .frame(width: 22, height: 22)
                                 .tint(.black)
                         }
+                    }
+                    .fullScreenCover(isPresented: $showSignInView) {
+                        SignUpView()
                     }
                 }
                 .padding(.leading, 160)
