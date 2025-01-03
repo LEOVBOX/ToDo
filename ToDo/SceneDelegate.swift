@@ -26,7 +26,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             print("Logged in user login: \(signedInUserLogin)")
             do {
                 let user = try SQLiteManager.shared.getUser(login: signedInUserLogin).get()
-                let navigationController = UIHostingController(rootView: HomeView(viewModel: HomePageViewModel(user: user)))
+                let navigationController = UIHostingController(rootView: HomeView(viewModel: HomePageViewModel(user: user, databaseManager: SQLiteManager.shared)))
                 scene.windows.first?.rootViewController = navigationController
             }
             catch {

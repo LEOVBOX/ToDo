@@ -8,7 +8,7 @@
 import SQLite3
 import Foundation
 
-class SQLiteManager {
+class SQLiteManager: DatabaseManager {
     static let shared = SQLiteManager()
     
     private var dbFilePath: URL?
@@ -174,48 +174,112 @@ class SQLiteManager {
         }
     }
     
-    func getTasksForUser(userId: Int) -> Result<[TaskViewModel], Error> {
-        let selectTasksQuery = """
+    func getTasksForUser(user: UserModel, count: Int? = nil, isCompleted: Bool? = nil) -> Result<[TaskModel], Error> {
+        var selectTasksQuery = """
         SELECT Title, Description, Date, Time, Status
         FROM Tasks 
-        WHERE UserID = ?;
+        WHERE UserID = ?
         """
-
+        
+        // Добавляем фильтрацию по статусу, если задан параметр isCompleted
+        if let isCompleted = isCompleted {
+            selectTasksQuery += " AND Status = ?"
+        }
+        
+        // Добавляем сортировку
+        selectTasksQuery += " ORDER BY Date DESC, Time ASC"
+        
+        // Добавляем ограничение на количество строк, если задан параметр count
+        if let count = count {
+            selectTasksQuery += " LIMIT ?"
+        }
+        
         var statement: OpaquePointer?
-
+        
+        // Подготовка SQL-запроса
         if sqlite3_prepare_v2(db, selectTasksQuery, -1, &statement, nil) != SQLITE_OK {
             let errorMessage = String(cString: sqlite3_errmsg(db))
             return .failure(NSError(domain: "SQLiteError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to prepare statement: \(errorMessage)"]))
         }
         
-        sqlite3_bind_int(statement, 1, Int32(userId))
-
-        var tasks: [TaskViewModel] = []
-
+        // Привязка параметров
+        var bindIndex: Int32 = 1
+        sqlite3_bind_int(statement, bindIndex, Int32(user.id))
+        bindIndex += 1
+        
+        if let isCompleted = isCompleted {
+            sqlite3_bind_int(statement, bindIndex, isCompleted ? 1 : 0)
+            bindIndex += 1
+        }
+        
+        if let count = count {
+            sqlite3_bind_int(statement, bindIndex, Int32(count))
+        }
+        
+        // Выполнение SQL-запроса
+        var tasks = [TaskModel]()
         while sqlite3_step(statement) == SQLITE_ROW {
             guard
                 let titlePointer = sqlite3_column_text(statement, 0),
+                let descriptionPointer = sqlite3_column_text(statement, 1),
                 let datePointer = sqlite3_column_text(statement, 2),
                 let timePointer = sqlite3_column_text(statement, 3)
             else {
                 sqlite3_finalize(statement)
                 return .failure(NSError(domain: "SQLiteError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to retrieve task data"]))
             }
-
+            
             let title = String(cString: titlePointer)
-            let description = sqlite3_column_text(statement, 1).flatMap { String(cString: $0) } ?? ""
+            let description = String(cString: descriptionPointer)
             let date = String(cString: datePointer)
             let time = String(cString: timePointer)
-            let status = Int(sqlite3_column_int(statement, 4)) == 1 ? true : false
-
-            let task = TaskViewModel(title: title, description: description, date: date, time: time, isCompletd: status)
+            let status = sqlite3_column_int(statement, 4) == 1
+            
+            let task = TaskModel(title: title, description: description, date: date, time: time, isCompletd: status, owner: user)
             tasks.append(task)
         }
-
+        
         sqlite3_finalize(statement)
-
         return .success(tasks)
     }
+    
+    func addTask(task: TaskModel) -> Result<Int, any Error> {
+        let insertTaskQuery = """
+        INSERT INTO Tasks (Title, Description, Date, Time, Status, UserID) 
+        VALUES (?, ?, ?, ?, ?, ?);
+        """
+        
+        var statement: OpaquePointer?
+        
+        // Подготовка SQL-запроса
+        if sqlite3_prepare_v2(db, insertTaskQuery, -1, &statement, nil) != SQLITE_OK {
+            let errorMessage = String(cString: sqlite3_errmsg(db))
+            return .failure(NSError(domain: "SQLiteError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to prepare statement: \(errorMessage)"]))
+        }
+        
+        // Привязка параметров
+        sqlite3_bind_text(statement, 1, task.title, -1, nil)
+        sqlite3_bind_text(statement, 2, task.description, -1, nil)
+        sqlite3_bind_text(statement, 3, task.date, -1, nil)
+        sqlite3_bind_text(statement, 4, task.time, -1, nil)
+        sqlite3_bind_int(statement, 5, Int32(task.isCompletd ? 1 : 0))
+        sqlite3_bind_int(statement, 6, Int32(task.owner.id))
+        
+        // Выполнение SQL-запроса
+        if sqlite3_step(statement) == SQLITE_DONE {
+            // Получение ID добавленной задачи
+            let taskId = Int(sqlite3_last_insert_rowid(db))
+            sqlite3_finalize(statement)
+            return .success(taskId)
+        } else {
+            let errorMessage = String(cString: sqlite3_errmsg(db))
+            sqlite3_finalize(statement)
+            return .failure(NSError(domain: "SQLiteError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to insert task: \(errorMessage)"]))
+        }
+    }
+
+    
+    
 
 
     

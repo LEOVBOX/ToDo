@@ -121,7 +121,7 @@ struct SignUpView: View {
                         }
                     }
                     .fullScreenCover(isPresented: $showHomeView) {
-                        HomeView(viewModel: HomePageViewModel(user: signedUpUser!))
+                        HomeView(viewModel: HomePageViewModel(user: signedUpUser!, databaseManager: SQLiteManager.shared))
                     }
                     
                     HStack {

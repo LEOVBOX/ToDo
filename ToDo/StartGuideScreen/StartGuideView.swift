@@ -105,7 +105,6 @@ struct GuideView: View {
 struct GuideSlideView: View {
     @StateObject var viewModel: GuideSlideViewModel
     
-    
     var body: some View {
         VStack (spacing: 100) {
                 Image(viewModel.imageName)

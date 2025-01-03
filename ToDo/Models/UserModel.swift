@@ -10,3 +10,5 @@ struct UserModel {
     var name: String
     var email: String
 }
+
+var testUser = UserModel(id: 0, name: "User", email: "User@mail.ru")
