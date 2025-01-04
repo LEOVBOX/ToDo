@@ -18,7 +18,6 @@ class SQLiteManager: DatabaseManager {
         openDatabase()
     }
     
-    // Открыть или создать базу данных
     private func openDatabase() {
         let fileURL = FileManager.default
             .urls(for: .documentDirectory, in: .userDomainMask)
@@ -26,14 +25,16 @@ class SQLiteManager: DatabaseManager {
             .appendingPathComponent("ToDo.sqlite")
         
         if sqlite3_open(fileURL.path, &db) == SQLITE_OK {
+            print("Успешное подключение к базе данных")
             dbFilePath = fileURL
             sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nil, nil, nil)
             createTables()
+            printAllTablesContent() // Вывод содержимого всех таблиц
         } else {
             print("Не удалось открыть базу данных")
         }
     }
-    
+
     private func createTables() {
         let createUsersTableQuery = """
         CREATE TABLE IF NOT EXISTS Users (
@@ -63,10 +64,49 @@ class SQLiteManager: DatabaseManager {
             print("Error of creating or opening Tasks table: \(String(cString: sqlite3_errmsg(db)))")
         }
     }
+
+    // Функция для вывода содержимого всех таблиц
+    private func printAllTablesContent() {
+        let tables = ["Users", "Tasks"] // Список таблиц
+        
+        for table in tables {
+            let query = "SELECT * FROM \(table);"
+            var statement: OpaquePointer?
+            
+            if sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK {
+                print("Содержимое таблицы \(table):")
+                
+                var hasRows = false
+                while sqlite3_step(statement) == SQLITE_ROW {
+                    hasRows = true
+                    let columnCount = sqlite3_column_count(statement)
+                    var row = [String]()
+                    
+                    for columnIndex in 0..<columnCount {
+                        if let columnText = sqlite3_column_text(statement, columnIndex) {
+                            row.append(String(cString: columnText))
+                        } else {
+                            row.append("NULL")
+                        }
+                    }
+                    
+                    print(row.joined(separator: " | "))
+                }
+                
+                if !hasRows {
+                    print("Таблица \(table) пуста.")
+                }
+                
+                sqlite3_finalize(statement)
+            } else {
+                print("Ошибка выполнения запроса для таблицы \(table): \(String(cString: sqlite3_errmsg(db)))")
+            }
+        }
+    }
     
     func addUser(name: String, email: String) -> Result<Int, Error> {
         let insertUserQuery = """
-        INSERT INTO Users (Name, Email) VALUES (?, ?);
+        INSERT INTO Users (Name, Email) VALUES ('\(name)', '\(email)');
         """
         
         var statement: OpaquePointer?
@@ -77,9 +117,9 @@ class SQLiteManager: DatabaseManager {
             return .failure(NSError(domain: "SQLiteError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to prepare statement: \(errorMessage)"]))
         }
         
-        // Привязка параметров
-        sqlite3_bind_text(statement, 1, name, -1, nil)
-        sqlite3_bind_text(statement, 2, email, -1, nil)
+//        // Привязка параметров
+//        sqlite3_bind_text(statement, 1, name, -1, nil)
+//        sqlite3_bind_text(statement, 2, email, -1, nil)
         
         // Выполнение SQL-запроса
         if sqlite3_step(statement) == SQLITE_DONE {

@@ -10,6 +10,7 @@ import SwiftUI
 
 struct SignUpView: View {
     @State private var showSignIn = false
+    @ObservedObject var viewModel: SignUpViewModel = SignUpViewModel()
     
     private let mainFontName = "Poppins-Regular"
     private let artificialFontName = "DarumaDropOne-Regular"
@@ -21,7 +22,6 @@ struct SignUpView: View {
     @State private var signUpError: Error? = nil
     @State private var showAlert = false
     @State private var showHomeView = false
-    @State private var signedUpUser: UserModel? = nil
     
     @FocusState private var focusedField: Field?
     
@@ -31,18 +31,14 @@ struct SignUpView: View {
     
     private func signUp() {
         do {
-            try RegistrationService.validateName(name: fullName).get()
-            try RegistrationService.validateEmail(eMail: eMail).get()
-            try RegistrationService.validatePassword(password: password).get()
-            signedUpUser = try RegistrationService.register(username: fullName, login: eMail, password: password).get()
+            try viewModel.signUp(name: fullName, email: eMail, password: password)
+            showHomeView = true
         }
         catch {
             signUpError = error
             showAlert = true
             return
         }
-        
-        showHomeView = true
     }
     
     var body: some View {
@@ -121,7 +117,10 @@ struct SignUpView: View {
                         }
                     }
                     .fullScreenCover(isPresented: $showHomeView) {
-                        HomeView(viewModel: HomePageViewModel(user: signedUpUser!, databaseManager: SQLiteManager.shared))
+                        if let signedUpUser = viewModel.signedUpUser {
+                            MainView(viewModel: MainViewModel(homePageViewModel: HomePageViewModel(user: signedUpUser, databaseManager: SQLiteManager.shared), takskPageViewModel: TasksPageViewModel(user: signedUpUser, databaseManager: SQLiteManager.shared)))
+                        }
+                        
                     }
                     
                     HStack {

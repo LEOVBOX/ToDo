@@ -70,7 +70,10 @@ struct TasksView: View {
     @Binding var showTabBar: Bool
     @FocusState var searchFieldFocused: Bool
     @State var newTaskTitle: String = ""
+    @State var descriptionText: String = ""
     @FocusState var newTaskTitleFocused: Bool
+    @FocusState var descriptionFocused: Bool
+    
     var body: some View {
         ZStack {
             VStack {
@@ -118,7 +121,7 @@ struct TasksView: View {
                 .padding(.horizontal, 18)
                 .padding(.top, 45)
                 
-            }
+            }.blur(radius: viewModel.showAddTaskView ? 5 : 0)
             
             if viewModel.showAddTaskView {
                 VStack {
@@ -166,36 +169,8 @@ struct TasksView: View {
                             }
                             
                             // Description
-                            
-                            ZStack {
-                                Rectangle()
-                                    .fill(Color(0x05243E))
-                                    .clipShape(RoundedRectangle(cornerRadius: 5))
-                                    .frame(height: 160)
-                                HStack(spacing: 12){
-                                    Image("description")
-                                        .resizable()
-                                        .frame(width: 20, height: 16)
-                                    ZStack(alignment: .leading) {
-                                        if newTaskTitle.isEmpty {
-                                            Text("description")
-                                                .font(Font.custom(mainFontName, size: 16))
-                                                .foregroundColor(Color(0xFFFFFF, alpha: 0.6))
-                                        }
-                                        
-                                        TextField("", text: $newTaskTitle)
-                                            .disableAutocorrection(true)
-                                            .font(Font.custom(mainFontName, size: 16))
-                                            .foregroundStyle(Color(0xFFFFFF, alpha: 0.6))
-                                            .focused($newTaskTitleFocused)
-                                    }
-                                
-                                    Spacer()
-                                }
-                                .padding()
-                                
-                            }
-                            
+                            MultilineTextFieldView(description: $descriptionText, image: Image("description"), backgroundColor: Color(0x05243E), foregroundColor: Color(0xFFFFFF, alpha: 0.6))
+                                .focused($descriptionFocused)
                             
                             // Date and time pickers
                             HStack (spacing: 20) {
@@ -281,19 +256,18 @@ struct TasksView: View {
                         .padding(.horizontal, 25)
                         
                     }
-                    .onTapGesture {
-                        newTaskTitleFocused = false
-                    }
                     .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2 )
                     .transition(.move(edge: .bottom))
+                    
                 }
             }
         }
         .onTapGesture {
             searchFieldFocused = false
-            //print("TaskView tapped")
+            newTaskTitleFocused = false
+            descriptionFocused = false
         }
-        .animation(.easeInOut, value: viewModel.showAddTaskView)
+        
     }
     
 }

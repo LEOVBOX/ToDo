@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct HomeView: View {
-    private let backgroundGradient = LinearGradient(gradient: Gradient(colors: [Color(0x1254AA), Color(0x05243E)]), startPoint: .top, endPoint: .bottom)
     var viewModel: HomePageViewModel
     var body: some View {
         VStack(spacing: 70) {

@@ -45,10 +45,10 @@ struct MainView: View {
     @StateObject var viewModel: MainViewModel
     @StateObject private var tabBarViewModel = CustomTabBarViewModel(
         currentIndex: 0,
-        tabImages: ["home", "tasks", "calendar"]
+        tabImages: ["home", "tasks", "calendar", "settings"]
     )
+    
     @State var showTabBar = true
-    //@FocusState var fieldFocused: Bool
     
     var body: some View {
         ZStack {
@@ -61,6 +61,8 @@ struct MainView: View {
                         .tag(0)
                     TasksView(viewModel: viewModel.tasksPageViewModel, showTabBar: $showTabBar)
                         .tag(1)
+                    SettingsView()
+                        .tag(3)
                     
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))

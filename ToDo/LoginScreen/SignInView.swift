@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct SignInView: View {
+    @ObservedObject var viewModel: SignInViewModel = SignInViewModel()
     @State private var showSignUp = false
     @State private var eMail: String = ""
     @State private var password: String = ""
     @State private var signInError: Error? = nil
     @State private var showAlert = false
     @State private var showMainView = false
-    @State private var signedInUser: UserModel? = nil
     
     @FocusState private var focusedField: Field?
     
@@ -24,14 +24,14 @@ struct SignInView: View {
     
     func signIn() {
         do {
-            signedInUser = try AuthenticationService.authenticate(login: eMail, password: password).get()
+            try viewModel.signIn(login: eMail, password: password)
+            showMainView = true
         }
         catch {
             showAlert = true
             signInError = error
             return
         }
-        showMainView = true
     }
     
     var body: some View {
@@ -92,7 +92,9 @@ struct SignInView: View {
                         }
                     }
                     .fullScreenCover(isPresented: $showMainView) {
-                        HomeView(viewModel: HomePageViewModel(user: signedInUser!, databaseManager: SQLiteManager.shared))
+                        if let signedInUser = viewModel.signedInUser {
+                            MainView(viewModel: MainViewModel(homePageViewModel: HomePageViewModel(user: signedInUser, databaseManager: SQLiteManager.shared), takskPageViewModel: TasksPageViewModel(user: signedInUser, databaseManager: SQLiteManager.shared)))
+                        }
                     }
                     
                     HStack {

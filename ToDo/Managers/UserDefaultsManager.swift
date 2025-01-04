@@ -12,11 +12,22 @@ class UserDefaultsManager {
     
     private let userKey = "loggedInUser"
     private let guideKey = "skipGuide"
+    private let signedInStatus = "signedIn"
     
     private init() {}
     
-    func saveLoggedInUser(login: String) {
+    func isSignedIn() {
+        UserDefaults.standard.bool(forKey: signedInStatus)
+    }
+    
+    func logout() {
+        UserDefaults.standard.set(false, forKey: signedInStatus)
+        UserDefaults.standard.set(nil, forKey: userKey)
+    }
+    
+    func saveLoggedInUser(login: String?) {
         UserDefaults.standard.set(login, forKey: userKey)
+        UserDefaults.standard.set(true, forKey: signedInStatus)
     }
     
     func getLoggedInUser() -> String? {

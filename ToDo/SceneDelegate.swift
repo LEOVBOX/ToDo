@@ -21,16 +21,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         print(UserDefaults.standard.dictionaryRepresentation())
         
-        
         if let signedInUserLogin = UserDefaultsManager.shared.getLoggedInUser() {
             print("Logged in user login: \(signedInUserLogin)")
             do {
                 let user = try SQLiteManager.shared.getUser(login: signedInUserLogin).get()
-                let navigationController = UIHostingController(rootView: HomeView(viewModel: HomePageViewModel(user: user, databaseManager: SQLiteManager.shared)))
+                let navigationController = UIHostingController(rootView: MainView(viewModel: MainViewModel(homePageViewModel: HomePageViewModel(user: user, databaseManager: SQLiteManager.shared), takskPageViewModel: TasksPageViewModel(user: user, databaseManager: SQLiteManager.shared))))
                 scene.windows.first?.rootViewController = navigationController
             }
             catch {
                 let navigationController = UIHostingController(rootView: SignInView())
+                scene.windows.first?.rootViewController = navigationController
             }
             
         }
