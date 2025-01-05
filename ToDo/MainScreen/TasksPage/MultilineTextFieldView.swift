@@ -23,9 +23,9 @@ struct MultilineTextFieldView: View {
                 Image("description")
                     .resizable()
                     .frame(width: 20, height: 16)
+                    .padding(.top, 10)
+                    
                 ZStack(alignment: .topLeading) {
-                    
-                    
                     TextEditor(text: $description)
                         .scrollContentBackground(.hidden)
                         .background(backgroundColor)
@@ -37,6 +37,7 @@ struct MultilineTextFieldView: View {
                         Text("description")
                             .font(Font.custom(mainFontName, size: 16))
                             .foregroundColor(foregroundColor)
+                            .padding(.top, 10)
                     }
                 }
             

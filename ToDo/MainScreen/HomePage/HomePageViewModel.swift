@@ -16,13 +16,14 @@ class HomePageViewModel: ObservableObject {
     
     func fetchTasks() {
         do {
-            var fetchedTasks = try databaseManager.getTasksForUser(user: user, count: 2, isCompleted: true).get()
-            for task in fetchedTasks {
-                tasks.append(TaskViewModel(task: task))
+            let completedTasks = try databaseManager.getTasksForUser(user: user, count: 2, isCompleted: true).get()
+            tasks = []
+            for task in completedTasks {
+                tasks.append(TaskViewModel(task: task, databaseManager: SQLiteManager.shared))
             }
-            fetchedTasks = try databaseManager.getTasksForUser(user: user, count: 2, isCompleted: false).get()
-            for task in fetchedTasks {
-                tasks.append(TaskViewModel(task: task))
+            let uncompletedTasks = try databaseManager.getTasksForUser(user: user, count: 2, isCompleted: false).get()
+            for task in uncompletedTasks {
+                tasks.append(TaskViewModel(task: task, databaseManager: SQLiteManager.shared))
             }
         }
         catch {
@@ -42,7 +43,7 @@ class HomePageViewModel: ObservableObject {
         self.user = user
         self.databaseManager = SQLiteManager.shared
         for task in tasks {
-            self.tasks.append(TaskViewModel(task: task))
+            self.tasks.append(TaskViewModel(task: task, databaseManager: SQLiteManager.shared))
         }
     }
 }

@@ -9,6 +9,8 @@ import SwiftUI
 
 struct TaskLabelView: View {
     @ObservedObject var viewModel: TaskViewModel
+    var showTaskView: (TaskViewModel)->()
+    
     var body: some View {
         ZStack {
             Rectangle()
@@ -41,7 +43,7 @@ struct TaskLabelView: View {
                     Spacer()
                     
                     Button (action:  {
-                        
+                        showTaskView(viewModel)
                     })
                     {
                         Image("chevronRight")
@@ -49,7 +51,6 @@ struct TaskLabelView: View {
                             .frame(width: 12, height: 16)
                             .tint(Color(0x0EA5E9))
                     }
-                    
                 }
                 .padding()
             }

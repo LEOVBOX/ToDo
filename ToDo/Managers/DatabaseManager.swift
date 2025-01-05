@@ -10,5 +10,7 @@ protocol DatabaseManager {
     func getUser(id: Int) -> Result<UserModel, Error>
     func getUser(login: String) -> Result<UserModel, Error>
     func getTasksForUser(user: UserModel, count: Int?, isCompleted: Bool?) -> Result<[TaskModel], Error>
-    func addTask(task: TaskModel) -> Result<Int, Error>
+    func deleteTask(id: Int) -> Result<Void, Error>
+    func addTask(title: String, description: String, date: String, time: String, isCompletd: Bool, owner: UserModel) -> Result<Int, Error>
+    func editTask(task: TaskModel) -> Result<Void, Error>
 }

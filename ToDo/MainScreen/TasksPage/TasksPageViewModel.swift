@@ -28,12 +28,13 @@ class TasksPageViewModel: ObservableObject {
         self.user = user
         self.databaseManager = SQLiteManager.shared
         for task in tasks {
-            let viewModel = TaskViewModel(task: task)
+            let viewModel = TaskViewModel(task: task, databaseManager: SQLiteManager.shared)
             self.tasks.append(viewModel)
             if !viewModel.isCompleted {
                 showTasks.append(viewModel)
             }
         }
+        
     }
     
     func filterTasks(name: String) {
@@ -49,8 +50,10 @@ class TasksPageViewModel: ObservableObject {
         // Получение задач из базы данных
         do {
             let fetchedTasks = try databaseManager.getTasksForUser(user: user, count: nil, isCompleted: false).get()
+            tasks = []
+            showTasks = []
             for task in fetchedTasks {
-                let viewModel = TaskViewModel(task: task)
+                let viewModel = TaskViewModel(task: task, databaseManager: SQLiteManager.shared)
                 tasks.append(viewModel)
                 if !viewModel.isCompleted {
                     showTasks.append(viewModel)
@@ -60,14 +63,5 @@ class TasksPageViewModel: ObservableObject {
         catch {
             alertCallback?(error)
         }
-    }
-
-    func addTask(title: String, description: String, date: String, time: String) {
-        // Создание новой задачи в базе данных
-        let newTask = TaskModel(title: title, description: description, date: date, time: time, isCompletd: false, owner: user)
-        databaseManager.addTask(task: newTask)
-        
-        // Обновление массива задач
-        fetchTasks()
     }
 }

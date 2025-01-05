@@ -52,30 +52,33 @@ struct MainView: View {
     
     var body: some View {
         ZStack {
-            backgroundGradient
-                .ignoresSafeArea()
-            
             VStack {
                 TabView(selection: $tabBarViewModel.currentIndex) {
                     HomeView(viewModel: viewModel.homePageViewModel)
                         .tag(0)
                     TasksView(viewModel: viewModel.tasksPageViewModel, showTabBar: $showTabBar)
                         .tag(1)
+                        
                     SettingsView()
                         .tag(3)
                     
                 }
+                .animation(.easeInOut, value: tabBarViewModel.currentIndex)
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                
-                
-                if showTabBar {
-                    CustomTabBarView(viewModel: tabBarViewModel)
-                }
-                
             }
             .ignoresSafeArea()
-            .padding(.bottom, showTabBar ? 20 : 0)
+            
+            
+            if showTabBar {
+                VStack {
+                    Spacer()
+                    CustomTabBarView(viewModel: tabBarViewModel)
+                }
+                .padding(.bottom, 20)
+                
+            }
         }
+        
     }
 }
 

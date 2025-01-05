@@ -12,12 +12,14 @@ struct SearchView: View {
     @State var placeholder: String
     @State var isSecure: Bool = false
     @State var text = ""
+    var backgroundColor: Color
+    var foregroundColor: Color
     var searchFunc: ((String)->())
     
     var body: some View {
         ZStack {
             Rectangle()
-                .fill(Color(0x102D53, alpha: 0.8))
+                .fill(backgroundColor)
                 .frame(height: 42)
                 .cornerRadius(5)
             
@@ -26,13 +28,13 @@ struct SearchView: View {
                     if text.isEmpty {
                         Text(placeholder)
                             .font(Font.custom(mainFontName, size: 12))
-                            .foregroundColor(Color(0xFFFFFF, alpha: 0.6))
+                            .foregroundColor(foregroundColor)
                     }
                     
                     TextField("", text: $text)
                         .disableAutocorrection(true)
                         .font(Font.custom(mainFontName, size: 12))
-                        .foregroundStyle(Color(0xFFFFFF, alpha: 0.6))
+                        .foregroundStyle(foregroundColor)
                 }
                 
                 Spacer()
@@ -53,32 +55,46 @@ struct SearchView: View {
 }
 
 struct TasksView: View {
-    func addTask() {
-        
-    }
-    
     func closeAddTasKView() {
         viewModel.showAddTaskView = false
         showTabBar = true
     }
     
-    func openDatePicker() {
-        
-    }
-    
+    @State private var showDatePicker = false
     @ObservedObject var viewModel: TasksPageViewModel
     @Binding var showTabBar: Bool
     @FocusState var searchFieldFocused: Bool
-    @State var newTaskTitle: String = ""
-    @State var descriptionText: String = ""
-    @FocusState var newTaskTitleFocused: Bool
-    @FocusState var descriptionFocused: Bool
+    @FocusState var taskFormTitleFocused: Bool
+    @FocusState var taskFormDescriptionFocused: Bool
+    @State var date: Date = Date()
+    @State var time: Date = Date()
+    @State var taskViewModel: TaskViewModel?
+    
+    @State private var keyboardOffset: CGFloat = 0
+    
+    @State var isShowTaskView: Bool = false
+    
+    func showTaskView(viewModel: TaskViewModel) {
+        taskViewModel = viewModel
+        isShowTaskView = true
+        showTabBar = true
+    }
+
+    func closeTaskView() {
+        isShowTaskView = false
+        viewModel.fetchTasks()
+    }
     
     var body: some View {
         ZStack {
+            backgroundGradient
+                .ignoresSafeArea()
+                .onTapGesture {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
             VStack {
                 VStack (spacing: 45) {
-                    SearchView(image: Image("search"), placeholder: "Search by task title", searchFunc: viewModel.filterTasks)
+                    SearchView(image: Image("search"), placeholder: "Search by task title", backgroundColor: Color(0x102D53, alpha: 0.8), foregroundColor: Color(0xFFFFFF, alpha: 0.6), searchFunc: viewModel.filterTasks)
                         .focused($searchFieldFocused)
                     VStack {
                         HStack {
@@ -91,7 +107,7 @@ struct TasksView: View {
                         ScrollView {
                             VStack {
                                 ForEach(viewModel.showTasks.indices, id: \.self) { index in
-                                    TaskLabelView(viewModel: viewModel.showTasks[index])
+                                    TaskLabelView(viewModel: viewModel.showTasks[index], showTaskView: showTaskView)
                                 }
                             }
                         }
@@ -117,157 +133,41 @@ struct TasksView: View {
                         }
                     }
                     Spacer()
+                        
                 }
                 .padding(.horizontal, 18)
                 .padding(.top, 45)
+                .padding(.bottom, 40)
                 
-            }.blur(radius: viewModel.showAddTaskView ? 5 : 0)
+            }
+            .blur(radius: viewModel.showAddTaskView ? 5 : 0)
             
             if viewModel.showAddTaskView {
+                
                 VStack {
-                    Spacer()
-                    // AddTaskView
-                    ZStack {
-                        Rectangle()
-                            .fill(.white)
-                            .clipShape(.rect(topLeadingRadius: 20, topTrailingRadius: 20))
-                            .ignoresSafeArea()
-                            
-                            
-                        VStack {
-                            // Task title
-                            HStack {
-                                ZStack {
-                                    Rectangle()
-                                        .fill(Color(0x05243E))
-                                        .clipShape(RoundedRectangle(cornerRadius: 5))
-                                        .frame(height: 42)
-                                    
-                                        
-                                    HStack(spacing: 15) {
-                                        Image("taskTitle")
-                                            .resizable()
-                                            .frame(width: 16, height: 14)
-                                        ZStack(alignment: .leading) {
-                                            if newTaskTitle.isEmpty {
-                                                Text("task")
-                                                    .font(Font.custom(mainFontName, size: 16))
-                                                    .foregroundColor(Color(0xFFFFFF, alpha: 0.6))
-                                            }
-                                            
-                                            TextField("", text: $newTaskTitle)
-                                                .disableAutocorrection(true)
-                                                .font(Font.custom(mainFontName, size: 16))
-                                                .foregroundStyle(Color(0xFFFFFF, alpha: 0.6))
-                                                .focused($newTaskTitleFocused)
-                                        }
-                                        Spacer()
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 14)
-                                }
-                            }
-                            
-                            // Description
-                            MultilineTextFieldView(description: $descriptionText, image: Image("description"), backgroundColor: Color(0x05243E), foregroundColor: Color(0xFFFFFF, alpha: 0.6))
-                                .focused($descriptionFocused)
-                            
-                            // Date and time pickers
-                            HStack (spacing: 20) {
-                                Button(action: openDatePicker) {
-                                    ZStack {
-                                        Rectangle()
-                                            .fill(Color(0x05243E))
-                                            .frame(height: 42)
-                                            .clipShape(RoundedRectangle(cornerRadius: 5))
-                                            
-                                        HStack {
-                                            Image("date")
-                                                .resizable()
-                                                .frame(width: 15, height: 14)
-                                            Text("date")
-                                                .font(Font.custom(mainFontName, size: 16))
-                                                .foregroundStyle(.white)
-                                            Spacer()
-                                        }
-                                        .padding()
-                                        
-                                    }
-                                    
-                                }
-                                
-                                Button(action: openDatePicker) {
-                                    ZStack {
-                                        Rectangle()
-                                            .fill(Color(0x05243E))
-                                            .frame(height: 42)
-                                            .clipShape(RoundedRectangle(cornerRadius: 5))
-                                        HStack {
-                                            Image("time")
-                                                .resizable()
-                                                .frame(width: 14, height: 13)
-                                            Text("time")
-                                                .font(Font.custom(mainFontName, size: 16))
-                                                .foregroundStyle(.white)
-                                            Spacer()
-                                        }
-                                        .padding()
-                                        
-                                    }
-                                    
-                                }
-                            }
-                            
-                            // Buttons
-                            HStack (spacing: 20) {
-                                Button(action: closeAddTasKView) {
-                                    ZStack {
-                                        Rectangle()
-                                            .stroke(Color(0x0EA5E9), lineWidth: 4)
-                                            .frame(height: 45)
-                                            .clipShape(RoundedRectangle(cornerRadius: 5))
-                                            
-                                        Text("close")
-                                            .font(Font.custom(mainFontName, size: 16))
-                                            .foregroundStyle(.black)
-                                    }
-                                    
-                                }
-                                
-                                Button(action: addTask) {
-                                    ZStack {
-                                        Rectangle()
-                                            .fill(Color(0x0EA5E9))
-                                            .frame(height: 45)
-                                            .clipShape(RoundedRectangle(cornerRadius: 5))
-                                            
-                                        Text("create")
-                                            .font(Font.custom(mainFontName, size: 16))
-                                            .foregroundStyle(.black)
-                                    }
-                                    
-                                }
-                            }
-                            
-                            Spacer()
-                            
-                        }
-                        .padding(.top, 55)
-                        .padding(.horizontal, 25)
-                        
+                    if (!taskFormTitleFocused && !taskFormDescriptionFocused) {
+                        Spacer()
                     }
-                    .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2 )
-                    .transition(.move(edge: .bottom))
                     
+                    TaskFormView(viewModel: TaskViewModel(user: viewModel.user, databaseManager: viewModel.databaseManager), newTaskTitleFocused: $taskFormTitleFocused, newTaskDescriptionFocused: $taskFormDescriptionFocused, confirmButtonText: "create", action: .create, updateTasks: viewModel.fetchTasks, closeFunc: closeAddTasKView)
+                        
+                    
+                    if (taskFormTitleFocused || taskFormDescriptionFocused) {
+                        Spacer()
+                    }
                 }
             }
+            
+            if isShowTaskView, let taskViewModel = taskViewModel {
+                TaskView(viewModel: taskViewModel, newTaskTitleFocused: $taskFormTitleFocused, descriptionFocused: $taskFormDescriptionFocused, close: closeTaskView)
+            }
         }
-        .onTapGesture {
-            searchFieldFocused = false
-            newTaskTitleFocused = false
-            descriptionFocused = false
+        .onAppear {
+            viewModel.fetchTasks()
         }
         
+    
     }
     
 }
+

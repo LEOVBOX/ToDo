@@ -8,65 +8,94 @@
 import SwiftUI
 
 struct HomeView: View {
-    var viewModel: HomePageViewModel
+    @ObservedObject var viewModel: HomePageViewModel
+    @State var isShowTaskView = false
+    @State var taskViewModel: TaskViewModel?
+    @FocusState var taskFormTitleFocused: Bool
+    @FocusState var taskFormDescriptionFocused: Bool
+    
+    func showTaskView(viewModel: TaskViewModel) {
+        taskViewModel = viewModel
+        isShowTaskView = true
+    }
+    
+    func closeTaskView() {
+        isShowTaskView = false
+        viewModel.fetchTasks()
+    }
+    
     var body: some View {
-        VStack(spacing: 70) {
-            // User info
-            HStack {
-                VStack (alignment: .leading) {
-                    Text(viewModel.user.name)
-                        .font(Font.custom(mainFontName, size: 18))
-                        .foregroundStyle(.white)
-                    Text(viewModel.user.email)
-                        .font(Font.custom(mainFontName, size: 14))
-                        .foregroundStyle(Color(0xFFFFFF, alpha: 0.5))
-                    
+        ZStack {
+            backgroundGradient
+                .ignoresSafeArea()
+                .onTapGesture {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 }
-                Spacer()
-            }
-            
-            // Tasks
-            VStack (spacing: 25) {
+            VStack(spacing: 70) {
+                // User info
                 HStack {
-                    Text("Incomplete Tasks")
-                        .font(Font.custom(mainFontName, size: 14))
-                        .foregroundStyle(.white)
-                    Spacer()
-                }
-                
-                VStack {
-                    ForEach(viewModel.tasks.indices, id: \.self) { index in
-                        if !viewModel.tasks[index].isCompleted {
-                            TaskLabelView(viewModel: viewModel.tasks[index])
-                        }
+                    VStack (alignment: .leading) {
+                        Text(viewModel.user.name)
+                            .font(Font.custom(mainFontName, size: 18))
+                            .foregroundStyle(.white)
+                        Text(viewModel.user.email)
+                            .font(Font.custom(mainFontName, size: 14))
+                            .foregroundStyle(Color(0xFFFFFF, alpha: 0.5))
                         
                     }
-                }
-                
-                HStack {
-                    Text("Completed Tasks")
-                        .font(Font.custom(mainFontName, size: 14))
-                        .foregroundStyle(.white)
                     Spacer()
                 }
                 
-                VStack {
+                // Tasks
+                VStack (spacing: 25) {
+                    HStack {
+                        Text("Incomplete Tasks")
+                            .font(Font.custom(mainFontName, size: 14))
+                            .foregroundStyle(.white)
+                        Spacer()
+                    }
                     
-                    ForEach(viewModel.tasks.indices, id: \.self) { index in
-                        if viewModel.tasks[index].isCompleted {
-                            TaskLabelView(viewModel: viewModel.tasks[index])
+                    VStack {
+                        ForEach(viewModel.tasks.indices, id: \.self) { index in
+                            if !viewModel.tasks[index].isCompleted {
+                                TaskLabelView(viewModel: viewModel.tasks[index], showTaskView: showTaskView)
+                            }
+                            
+                        }
+                    }
+                    
+                    HStack {
+                        Text("Completed Tasks")
+                            .font(Font.custom(mainFontName, size: 14))
+                            .foregroundStyle(.white)
+                        Spacer()
+                    }
+                    
+                    VStack {
+                        
+                        ForEach(viewModel.tasks.indices, id: \.self) { index in
+                            if viewModel.tasks[index].isCompleted {
+                                TaskLabelView(viewModel: viewModel.tasks[index], showTaskView: showTaskView)
+                            }
                         }
                     }
                 }
+                
+                
+                Spacer()
+                
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 25)
             
             
-            Spacer()
-            
-            
+            if isShowTaskView, let taskViewModel = taskViewModel {
+                TaskView(viewModel: taskViewModel, newTaskTitleFocused: $taskFormTitleFocused, descriptionFocused: $taskFormDescriptionFocused, close: closeTaskView)
+            }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 25)
+        .onAppear {
+            viewModel.fetchTasks()
+        }
     }
 }
 
